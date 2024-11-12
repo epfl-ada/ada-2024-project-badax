@@ -4,8 +4,8 @@
 
 ```bash
 # clone project
-git clone <project link>
-cd <project repo>
+git clone git@github.com:epfl-ada/ada-2024-project-badax.git
+cd ada-2024-project-badax
 
 
 # install requirements
