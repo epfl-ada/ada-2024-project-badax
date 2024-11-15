@@ -1,3 +1,8 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from collections import Counter
+
 def assign_role_importance(merged_df):
     """
     Function to assign first, second, and third roles for actors and genders.
@@ -70,7 +75,7 @@ def country_female_ratio(merged_df, country):
     return standard_dev
 
 def role_man(first_role):
-        """
+    """
     Function to check if the first role is assigned to a man.
     
     Parameters:
@@ -79,4 +84,7 @@ def role_man(first_role):
     Returns:
     - 1 if first role is for male, 0 otherwise.
     """
-    return 1 if first_role == "M" else 0
+    if first_role == "M":
+        return 1
+    else:
+        return 0
