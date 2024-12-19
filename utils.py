@@ -1,0 +1,1 @@
+##here we put all our functions so that the notebook is not messy
