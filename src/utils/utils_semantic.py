@@ -28,8 +28,6 @@ except OSError:
     spacy.cli.download("en_core_web_sm", disable=['parser', 'ner'])
     nlp = spacy.load("en_core_web_sm", disable=['parser', 'ner'])
     
-
-
 def preprocess_movie_data(df_movies):
     # Convert release date to a datetime if not already
     df_movies['Movie_release_date'] = pd.to_datetime(df_movies['Movie_release_date'], errors='coerce')
@@ -112,6 +110,14 @@ def preprocess_movie_data(df_movies):
     # Select the relevant columns to return
     return df_movies[['Wikipedia_movie_ID', 'Movie_name', 'Movie_countries', 'Movie_release_date', 'Female Percentage', 'tokens_filtered']]
 
+def preprocess_and_save_data(df, preprocess_function, output_path):
+
+    df['Clean_Summary'] = df['Movie_Summary'].apply(preprocess_function)
+
+    print(f"Saving preprocessed data to {output_path}...")
+    df.to_parquet(output_path, index=False)
+    print("Preprocessed data saved successfully.")
+    return df
 
 def calculate_female_percentage(genders):
     valid_genders = [g for g in genders if pd.notna(g)]
@@ -119,7 +125,6 @@ def calculate_female_percentage(genders):
         return -1
     female_count = sum(1 for g in valid_genders if g == 'F')
     return (female_count / len(valid_genders)) * 100
-
 
 def preprocess_text(text):
     
@@ -142,6 +147,61 @@ def preprocess_text(text):
     
     return ' '.join(tokens)
 
+
+def load_and_merge_data(metadata_loader, summaries_loader, characters_filepath):
+    """
+    Loads and merges movie metadata, summaries, and character data into a single DataFrame.
+
+    Parameters:
+        metadata_loader (callable): Function to load movie metadata.
+        summaries_loader (callable): Function to load movie summaries.
+        characters_filepath (str): File path to the character metadata TSV file.
+
+    Returns:
+        DataFrame: Merged DataFrame with movie and character information.
+    """
+    # Load CMU Corpus Dataset
+    metadata = metadata_loader()
+    summaries_df = summaries_loader()
+    cmu_df = metadata.merge(summaries_df, on="Wikipedia_movie_ID")
+
+    # Load characters data
+    characters = pd.read_table(characters_filepath, header=None)
+    characters.columns = [
+        "Wikipedia_movie_ID",
+        "Freebase movie ID",
+        "Movie release date",
+        "Character name",
+        "Actor date of birth",
+        "Actor gender",
+        "Actor height (in meters)",
+        "Actor ethnicity (Freebase ID)",
+        "Actor name",
+        "Actor age at movie release",
+        "Freebase character/actor map ID",
+        "Freebase character ID",
+        "Freebase actor ID"
+    ]
+
+    # Merging character database with summaries
+    characters = characters[["Wikipedia_movie_ID", "Actor gender", "Character name"]]
+    characters = characters.groupby("Wikipedia_movie_ID").agg({
+        "Actor gender": list, 
+        "Character name": list,
+    }).reset_index()
+
+    char_sum_CMU = pd.merge(cmu_df, characters, on="Wikipedia_movie_ID", how="inner")
+    # Keeping only relevant columns
+    char_sum_CMU = char_sum_CMU[["Wikipedia_movie_ID", "Movie_name", "Actor gender", "Movie_countxries","Movie_release_date" ,"Character name","Movie_Summary"]]
+
+    # Create the new column with the female percentage
+    char_sum_CMU['Female Percentage'] = char_sum_CMU['Actor gender'].apply(calculate_female_percentage)
+    char_sum_CMU = char_sum_CMU[char_sum_CMU['Female Percentage'] != -1]
+
+    print(f"Total movies combined: {char_sum_CMU.shape[0]}")
+    return char_sum_CMU
+
+
 def get_top_n_similar_words(centroid, token_embeddings, top_n=50):
 
     # Stack all token embeddings into a matrix
@@ -160,7 +220,6 @@ def get_top_n_similar_words(centroid, token_embeddings, top_n=50):
     top_words = [(tokens[i], similarity_scores[i]) for i in top_n_idx]
     
     return top_words
-
 
 def visualize_centroids_and_words(category_centroids, sentiment_lexicons, token_embeddings):
     # Collect centroids and their top-N similar words
@@ -287,7 +346,7 @@ def visualize_centroids_and_words(category_centroids, sentiment_lexicons, token_
     )
 
     # Display the 3D Plot
-    fig_3d.show()
+    fig_3d.show("svg")
 
     # Save the 3D Figure as an HTML File
     fig_3d.write_html("centroids_top_words_plot_3d.html")
@@ -370,12 +429,10 @@ def plot_sentiment_comparison(sentiment_stats, sentiment_cols, title='Comparison
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgray')
 
     # Show the figure
-    fig.show()
+    fig.show("svg")
 
     # Optionally, save as an HTML file for embedding on a website
     # fig.write_html("interactive_sentiment_comparison.html")
-
-
 
 def perform_stat_tests(female_movies, male_movies, sentiment_cols, female_means, male_means, alpha=0.05):
     # Function to perform statistical tests and return the result
@@ -594,7 +651,6 @@ def create_image_selector_html(image_dir):
 
     print(f"HTML file created: {html_file_path}")
 
-
 def create_sentiment_choropleth(country_comparison, sentiment_cols):
     """
     Generates an interactive choropleth map displaying sentiment scores across countries
@@ -711,5 +767,5 @@ def create_sentiment_choropleth(country_comparison, sentiment_cols):
     fig = go.Figure(data=data_traces, layout=layout)
 
     # Display the interactive figure
-    fig.show()
+    fig.show("svg")
     # fig.write_html("geographic_sentiment_score.html")
