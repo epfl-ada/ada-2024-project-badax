@@ -5,7 +5,7 @@
 We believe that the movie industry reflects society’s main values and concerns. Movies can provide new ideals, provide realistic historical depictions (i.e war/slavery), or address avant-gardist themes to shape and improve the future of our world. Feminism is a topic that lies in between blockbusters (because it concerns the globality of the world) but remains well under-represented and remains a hot topic. Understanding the transformation of society by feminism through films is a way to grasp the dynamics of other avant-garde/progressist topics in society. 
 Primarily, this project studies the presence and the role of women in the movie industry. The second part of the project focuses on the evolution of women’s roles in erotic, war, and religious movies. Lastly, this project studies whether directors who tend to be more inclusive towards female actors, also tackle other societal issues like climate change.
 
-
+The data story can be found here: https://yassine-turki.github.io/ada-template-website/
 
 ## Research Questions:
 ### First part: Presence and role of women in the movie industry
