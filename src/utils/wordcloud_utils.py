@@ -243,3 +243,42 @@ def hypothesis_test(char_sum_CMU):
         print("The Spearman test indicates a significant relationship between gender ratio and revenue.")
     else:
         print("The Spearman test does not indicate a significant relationship.")
+
+def plot_revenue_vs_age(df_gender_revenue):
+    # Plot the distribution
+    # Define age bins and labels
+    bins = np.arange(0, 101, 10)  # 0-10, 10-20, ..., 90-100
+    labels = [f'{i}-{i+10}' for i in bins[:-1]]
+
+    # Create a new column for age ranges
+    df_gender_revenue['Age_Range'] = pd.cut(df_gender_revenue['Actor_age'], bins=bins, labels=labels, include_lowest=True)
+
+    # Filter out non-positive revenues
+    df_gender_revenue = df_gender_revenue[df_gender_revenue['Movie_box_office_revenue'] > 0]
+
+    # Plot side-by-side boxplots
+    plt.figure(figsize=(8, 6))
+    sns.boxplot(
+        x='Age_Range',
+        y='Movie_box_office_revenue',
+        hue='Actor_gender',
+        data=df_gender_revenue,
+        palette={'M': 'blue', 'F': 'pink'},
+        showfliers=False
+    )
+
+    # Log scale for y-axis
+    plt.yscale('log')
+
+    # Customize the plot
+    plt.title('Movie Revenue by Actor Age Range and Gender', fontsize=18, fontweight='bold')
+    plt.xlabel('Actor Age Range', fontsize=14, fontweight='bold')
+    plt.ylabel('Movie Box Office Revenue (Log Scale)', fontsize=14, fontweight='bold')
+    plt.xticks(rotation=45, fontsize=12, fontweight='bold')
+    plt.yticks(fontsize=12, fontweight='bold')
+    plt.legend(title='Actor Gender', fontsize=12, title_fontsize=14, loc='upper right')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+
+    # Save and display the plot
+    plt.savefig('revenue_vs_age_range_gender_boxplot.png', dpi=300, bbox_inches='tight')
+    plt.show()
