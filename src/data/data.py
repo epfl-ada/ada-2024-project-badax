@@ -22,6 +22,9 @@ def load_metadata():
     ]
     #more readable format
     metadata["Movie_genres"] = metadata["Movie_genres"].apply(lambda x: list(json.loads(x).values()))
+    # Only keep year in date
+    metadata['Movie_release_date'] = pd.to_numeric(metadata['Movie_release_date'].str[:4], errors='coerce')
+    metadata['Movie_release_date'] = metadata['Movie_release_date'].fillna(0).astype(int)
     metadata.loc[metadata['Wikipedia movie ID']==29666067,'Movie_release_date'] = '2010-12-02'
     metadata["Movie_languages"] = metadata["Movie_languages"].apply(lambda x: list(json.loads(x).values()))
     metadata["Movie_countries"] = metadata["Movie_countries"].apply(lambda x: list(json.loads(x).values()))
@@ -99,6 +102,37 @@ def load_summaries():
     
     return summaries_df
 
+def load_imdb_titles():
+    imdb_titles = pd.read_csv(f"{IMDB_PATH}/title.basics.tsv", sep="\t")
+    print('We drop all the rows that do not describe movies')
+    imdb_titles = imdb_titles[imdb_titles["titleType"] == 'movie']
+    print('We verify we have only one title type:')
+    print(imdb_titles.nunique())
+    print('We can see that endYear is not really useful (only 1 value). We decide to drop it and only use startYear as reference for later.')
+    imdb_titles = imdb_titles.drop(columns=["endYear"])
+    print('We convert start year into integers so we can easily plot them afterwards. We also convert NaNs to 0 so that we can avoid errors later.')
+    imdb_titles["startYear"] = pd.to_numeric(imdb_titles["startYear"], errors="coerce")
+    imdb_titles["startYear"] = imdb_titles["startYear"].fillna(0).astype(int)
+    imdb_titles = imdb_titles.rename(columns = {"startYear":"Movie_release_date"})
+    return imdb_titles
 
-
+def load_imdb_actors(imdb_titles):
+    imdb_actors = pd.read_csv(f"{IMDB_PATH}/title.principals.tsv", sep="\t", engine = "pyarrow")
+    print('We drop all movie staff that is not an actor or actress')
+    imdb_actors = imdb_actors.drop(
+        imdb_actors[~imdb_actors["category"].isin(["actor", "actress"])].index
+    )
+    print('We drop duplicate actors (that appear in the same movie more than once)')
+    imdb_actors = imdb_actors.drop_duplicates(subset=['tconst', 'nconst'])
+    print('We only want to keep actors which are in our movies dataset')
+    imdb_actors = imdb_actors[imdb_actors['tconst'].isin(imdb_titles['tconst'])]
+    print('Adding actor names')
+    imdb_actors_names = pd.read_csv(f"{IMDB_PATH}/name.basics.tsv", sep="\t", engine = "pyarrow")
+    print('We assign actors ids with their other information by merging imdb_actors and imdb_actors_names')
+    imdb_actors = imdb_actors.merge(imdb_actors_names[['nconst', 'primaryName']], on='nconst', how='left')
+    print("Mapping the gender for readability, renaming the column's name and dropping unused columns")
+    imdb_actors.category = imdb_actors.category.map({"actor": "M", "actress": "F"})
+    imdb_actors = imdb_actors.rename(columns={"category":"gender"})
+    imdb_actors_clean = imdb_actors.drop(columns = ["ordering", "job", "characters"])
+    return imdb_actors_clean
 
