@@ -67,3 +67,6 @@ IMDB's detailed information about cast and gender, along with a clear hierarchy 
 Make sure to download the datasets above into a “data” folder in order to run the notebook 
 Aside from the main (CMU) dataset, IMDb datasets are needed:
 https://developer.imdb.com/non-commercial-datasets/
+
+Please save CMU datasets in data/imdb_data/
+Please save IMDb datasets in data/MovieSummaries
