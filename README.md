@@ -57,11 +57,11 @@ IMDB's detailed information about cast and gender, along with a clear hierarchy 
 
 
  ## Organisation: 
--Oskar: Cleaning and merging datasets, map creation for revenue analysis
--Yassine: Exploratory data analysis with statistical testing, analysis of female directors
--Alessandro: Analysis on war/violent movies and relation with feminism
--Lorentz: Overall gender analysis, writing up report on data story
--Alix: Application of NLP to gender description analysis, writing up report on data story
+- Oskar: Cleaning and merging datasets, map creation for revenue analysis
+- Yassine: Exploratory data analysis with statistical testing, analysis of female directors
+- Alessandro: Analysis on war/violent movies and relation with feminism
+- Lorentz: Overall gender analysis, writing up report on data story
+- Alix: Application of NLP to gender description analysis, writing up report on data story
 
 ## How to run the notebook: 
 Make sure to download the datasets above into a “data” folder in order to run the notebook 
