@@ -136,3 +136,72 @@ def load_imdb_actors(imdb_titles):
     imdb_actors_clean = imdb_actors.drop(columns = ["ordering", "job", "characters"])
     return imdb_actors_clean
 
+def get_preliminary_dfs():
+    CMU_PATH = "data/MovieSummaries/"
+    IMDB_PATH = "data/imdb_data/"
+
+    movie_data_unmerged = pd.read_table(CMU_PATH + "movie.metadata.tsv", header=None)
+
+    movie_data_unmerged.columns = [
+        "Wikipedia_movie_ID",
+        "Freebase_movie_ID",
+        "Movie_name",
+        "Movie_release_date",
+        "Movie_box_office_revenue",
+        "Movie_runtime",
+        "Movie_languages", 
+        "Movie_countries",  
+        "Movie_genres"     
+    ]
+
+    with open(CMU_PATH + "plot_summaries.txt", "r", encoding="utf-8") as f:
+        file = f.readlines()
+
+    data = [line.strip().split("\t", 1) for line in file]
+
+    summaries_df = pd.DataFrame(data, columns=["Wikipedia_movie_ID", "Movie_Summary"])
+
+    summaries_df['Wikipedia_movie_ID'] = summaries_df['Wikipedia_movie_ID'].apply(int)
+
+    df_character = pd.read_table(CMU_PATH+"character.metadata.tsv", header=None)
+
+    df_character.columns = ["Wikipedia_movie_ID",
+    "Freebase_movie_ID",
+    "Movie_release_date",
+    "Character_name",
+    "Actor_date_of_birth",
+    "Actor_gender",
+    "Actor_height", #in meters
+    "Actor_ethnicity",
+    "Actor_name",
+    "Actor_age_at_movie_release",
+    "Freebase_character/actor_map_ID",
+    "Freebase_character_ID",
+    "Freebase_actor_ID"]
+
+    df_character["Wikipedia_movie_ID"] = df_character["Wikipedia_movie_ID"].apply(int)
+    #here we only keep the year (and not the month) + we put the same format
+    df_character["Movie_release_date"] = df_character["Movie_release_date"].apply(lambda x: int(str(x).split("-")[0]) if type(x) == str else np.nan)
+
+    df_movie = movie_data_unmerged.merge(summaries_df, on="Wikipedia_movie_ID", how='inner')
+
+    df_movie["Movie_genres"] = df_movie["Movie_genres"].apply(lambda x: list(json.loads(x).values()))
+    #some movies have release date in the form year-month-day, we only want the year, and some have nan values
+    df_movie["Movie_release_date"] = df_movie["Movie_release_date"].apply(lambda x: int(str(x).split("-")[0]) if type(x) == str else np.nan)
+    df_movie.loc[df_movie["Movie_name"] == "Hunting Season", "Movie_release_date"] = 2010
+
+    def find_movie_ID(movie_name):
+        return int(df_movie[df_movie["Movie_name"] == movie_name]["Wikipedia_movie_ID"].values[0])
+
+    df_imdb = pd.read_csv(IMDB_PATH +'merged_imdb_2.csv')
+    df_imdb.head()
+    df_imdb["actors"] = df_imdb["actors"].apply(lambda x: ast.literal_eval(x))
+
+    df_imdb.rename(columns={"Wikipedia movie ID": "Wikipedia_movie_ID"}, inplace=True)
+
+    df_actor = pd.DataFrame()
+    df_actor["actor"] = [item for sublist in df_imdb['actors'].tolist() for item in sublist]
+    df_actor = df_actor.drop_duplicates()
+    df_movie = df_movie.merge(df_imdb[["gender", "Wikipedia_movie_ID"]], on="Wikipedia_movie_ID", how='inner')
+    df_movie["Movie_countries"] = df_movie["Movie_countries"].apply(lambda x: list(json.loads(x).values()))
+    return df_movie, df_character, df_actor
