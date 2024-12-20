@@ -50,14 +50,6 @@ IMDB's detailed information about cast and gender, along with a clear hierarchy 
 - Statistical analysis to test the relation between women’s leading roles and movie release date. Test whether there’s a significant increase in female lead roles over time.
 - Compare sentiment analysis scores for movies with a male lead versus a female lead to determine any significant differences in perception.
 
-## Proposed timelines:
-- Finish Initial gender representation analysis (part of research questions): Nov 22
-- If feasible, analyze all research questions with any additional datasets : graphs  Nov 29
-- Start working on a website (creation, putting part of analysis in form of a story) : Dec 6
-- Finishing the website: Dec 13th
-- P3 Due (polishing all jupyter notebooks, github repo, and website): Dec 20
-
-
  ## Organisation: 
 - Oskar: Cleaning and merging datasets, map creation for revenue analysis
 - Yassine: Exploratory data analysis with statistical testing, analysis of female directors
