@@ -1,5 +1,6 @@
 .ipynb_checkpoints/
 __pycache__/
-data/
+data/MovieSummaries/
+data/imdb_data/
 *.html
 *.png
