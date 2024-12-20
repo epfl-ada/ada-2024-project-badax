@@ -25,7 +25,7 @@ def load_metadata():
     # Only keep year in date
     metadata['Movie_release_date'] = pd.to_numeric(metadata['Movie_release_date'].str[:4], errors='coerce')
     metadata['Movie_release_date'] = metadata['Movie_release_date'].fillna(0).astype(int)
-    metadata.loc[metadata['Wikipedia movie ID']==29666067,'Movie_release_date'] = '2010-12-02'
+    metadata.loc[metadata['Wikipedia movie ID']==29666067,'Movie_release_date'] = 2010
     metadata["Movie_languages"] = metadata["Movie_languages"].apply(lambda x: list(json.loads(x).values()))
     metadata["Movie_countries"] = metadata["Movie_countries"].apply(lambda x: list(json.loads(x).values()))
     #fix country mappings
