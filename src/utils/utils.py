@@ -7,17 +7,6 @@ import spacy
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
-# Download NLTK resources
-# nltk.download('punkt')
-# nltk.download('stopwords')
-
-try:
-    nlp = spacy.load("en_core_web_sm", disable=['parser', 'ner'])
-except OSError:
-    print("Model 'en_core_web_sm' not found. Downloading...")
-    spacy.cli.download("en_core_web_sm", disable=['parser', 'ner'])
-    nlp = spacy.load("en_core_web_sm", disable=['parser', 'ner'])
-    
 
 
 
@@ -108,50 +97,3 @@ def role_man(first_role):
         return 0
 
 
-def calculate_female_percentage(genders):
-    valid_genders = [g for g in genders if pd.notna(g)]
-    if len(valid_genders) == 0:
-        return -1
-    female_count = sum(1 for g in valid_genders if g == 'F')
-    return (female_count / len(valid_genders)) * 100
-
-
-def preprocess_text(text):
-    
-    STOPWORDS = spacy.lang.en.stop_words.STOP_WORDS.union({'film', 'story', 'character', 'characters', 'movie', 'movies'})
-
-    if pd.isnull(text):
-        return ""
-    
-    # Lowercase and remove non-alphabetic characters
-    text = re.sub(r'[^a-zA-Z\s]', '', text.lower())
-    
-    # Process text with spaCy
-    doc = nlp(text)
-    
-    # Remove person names (PERSON entities)
-    tokens = [token.lemma_ for token in doc 
-              if token.ent_type_ != 'PERSON' 
-              and token.lemma_ not in STOPWORDS 
-              and token.lemma_.isalpha()]
-    
-    return ' '.join(tokens)
-
-def get_top_n_similar_words(centroid, token_embeddings, top_n=50):
-
-    # Stack all token embeddings into a matrix
-    tokens = list(token_embeddings.keys())
-    embeddings = np.vstack(list(token_embeddings.values()))
-    
-    # Compute cosine similarity between centroid and all token embeddings
-    centroid_norm = centroid / np.linalg.norm(centroid) if np.linalg.norm(centroid) != 0 else centroid
-    embeddings_norm = embeddings / (np.linalg.norm(embeddings, axis=1, keepdims=True) + 1e-10)
-    similarity_scores = np.dot(embeddings_norm, centroid_norm)
-    
-    # Get top N indices
-    top_n_idx = similarity_scores.argsort()[-top_n:][::-1]
-    
-    # Retrieve top N words and their similarity scores
-    top_words = [(tokens[i], similarity_scores[i]) for i in top_n_idx]
-    
-    return top_words
